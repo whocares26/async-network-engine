@@ -77,7 +77,7 @@ Socket::~Socket() {
 }
 
 Socket::Socket() {
-    m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+    m_fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (m_fd == -1) {
         throw std::system_error(errno, 
             std::generic_category(), "Failed to create socket in constructor"); 

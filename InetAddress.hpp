@@ -18,7 +18,6 @@ public:
 
     uint16_t to_port() const;
 
-    void set_length();
 private:
     sockaddr_in m_addr{};
 };

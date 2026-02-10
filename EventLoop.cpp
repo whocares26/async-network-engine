@@ -74,7 +74,7 @@ void EventLoop::update_fd(int fd, uint32_t events) {
 }
 
 void EventLoop::run() {
-    std::vector<epoll_event> events(32);
+    std::vector<epoll_event> events(1024);
     m_running = true;
     while (m_running) {
         int alive = epoll_wait(m_epoll_fd, events.data(), 32, -1);
