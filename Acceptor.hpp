@@ -4,8 +4,6 @@
 #include "EventLoop.hpp"
 #include "functional"
 
-class EventLoop;
-
 class Acceptor {
 public:
     using NewConnectionCallback = std::function<void(int fd, const InetAddress& addr)>;

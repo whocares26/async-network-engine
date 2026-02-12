@@ -1,0 +1,48 @@
+#pragma once
+
+#include <memory>
+#include <string>
+#include <functional>
+#include "Socket.hpp"
+#include "InetAddress.hpp"
+#include "EventLoop.hpp"
+
+class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
+public:
+    using ConnectionCallback = std::function<void(const std::shared_ptr<TcpConnection>&)>;
+    using MessageCallback = std::function<void(const std::shared_ptr<TcpConnection>&, std::string& )>;
+
+    TcpConnection(EventLoop* loop, int fd, const InetAddress& peerAddr);
+    ~TcpConnection();
+
+    TcpConnection(const TcpConnection&) = delete;
+    TcpConnection& operator=(const TcpConnection&) = delete;
+
+    void connection_established();
+    void connection_destroyed();
+
+    void send(const std::string& buffer);
+    void shutdown();
+
+    void set_connection_callback(ConnectionCallback cb);
+    void set_message_callback(MessageCallback cb);
+
+private:
+    void handle_read();
+    void handle_write();
+    void handle_close();
+    void handle_error();
+
+    EventLoop* m_loop;
+    std::unique_ptr<Socket> m_client_socket;
+    InetAddress m_peer_addr;
+
+    enum State { Connecting, Connected, Disconnecting, Disconnected };
+    State m_state;
+
+    std::string m_input_buffer;
+    std::string m_output_buffer;
+
+    ConnectionCallback m_connection_cb;
+    MessageCallback m_message_cb;
+};
