@@ -3,8 +3,8 @@
 #include <memory>
 #include <unordered_map>
 #include <string>
-#include "Acceptor.hpp"
-#include "TcpConnection.hpp"
+#include "net/Acceptor.hpp"
+#include "net/TcpConnection.hpp"
 
 class TcpServer {
 public:

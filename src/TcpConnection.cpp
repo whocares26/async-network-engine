@@ -1,4 +1,4 @@
-#include "TcpConnection.hpp"
+#include "net/TcpConnection.hpp"
 
 void TcpConnection::set_connection_callback(ConnectionCallback cb) {
     m_connection_cb = cb;

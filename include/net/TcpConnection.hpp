@@ -3,9 +3,9 @@
 #include <memory>
 #include <string>
 #include <functional>
-#include "Socket.hpp"
-#include "InetAddress.hpp"
-#include "EventLoop.hpp"
+#include "net/Socket.hpp"
+#include "net/InetAddress.hpp"
+#include "net/EventLoop.hpp"
 
 class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 public:

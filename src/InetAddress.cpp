@@ -1,4 +1,4 @@
-#include <InetAddress.hpp>
+#include <net/InetAddress.hpp>
 
 InetAddress::InetAddress(uint16_t port, std::string ip) {
     m_addr.sin_family = AF_INET;
