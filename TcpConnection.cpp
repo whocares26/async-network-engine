@@ -7,7 +7,13 @@ void TcpConnection::set_connection_callback(ConnectionCallback cb) {
 void TcpConnection::set_message_callback(MessageCallback cb) {
     m_message_cb = cb;
 }
-    
+
+void TcpConnection::set_close_callback(CloseCallback cb) {
+    m_close_cb = cb;
+}
+int TcpConnection::fd() {
+    return m_client_socket->fd();
+}
 TcpConnection::TcpConnection(EventLoop* loop, int client_fd, const InetAddress& peerAddr) : 
     m_loop(loop), m_peer_addr(peerAddr), m_client_socket(new Socket(client_fd)), 
         m_state(Connecting) { 
@@ -102,6 +108,10 @@ void TcpConnection::handle_close() {
     
     if (m_connection_cb) {
         m_connection_cb(shared_from_this());
+    }
+
+    if (m_close_cb) {
+        m_close_cb(shared_from_this());
     }
 }
 
