@@ -1,7 +1,7 @@
 #pragma once
 #include <unistd.h>
 #include <fcntl.h>
-#include "InetAddress.hpp"
+#include "net/InetAddress.hpp"
 #include <system_error>
 #include <exception>
 #include <sys/socket.h>

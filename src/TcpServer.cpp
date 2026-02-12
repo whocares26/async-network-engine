@@ -43,3 +43,6 @@ TcpServer::~TcpServer() {
         conn.second->connection_destroyed();
     }
 }
+EventLoop* TcpServer::get_loop() {
+    return m_loop;
+}

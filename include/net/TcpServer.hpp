@@ -21,7 +21,7 @@ public:
 
     void set_connection_callback(ConnectionCallback cb);
     void set_message_callback(MessageCallback cb);
-
+    EventLoop* get_loop();
 private:
     void new_connection(int fd, const InetAddress& peerAddr);
 

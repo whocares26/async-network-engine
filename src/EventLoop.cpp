@@ -77,7 +77,7 @@ void EventLoop::run() {
     std::vector<epoll_event> events(1024);
     m_running = true;
     while (m_running) {
-        int alive = epoll_wait(m_epoll_fd, events.data(), 32, -1);
+        int alive = epoll_wait(m_epoll_fd, events.data(), 1024, -1);
         if (alive == -1) {
             switch(errno) {
                 case EINTR:
