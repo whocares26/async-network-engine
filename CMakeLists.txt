@@ -9,3 +9,5 @@ include_directories(include)
 file(GLOB SOURCES "src/*.cpp")
 
 add_executable(my_server examples/main.cpp ${SOURCES})
+
+target_link_libraries(my_server pthread)

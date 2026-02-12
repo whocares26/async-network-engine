@@ -114,13 +114,13 @@ void TcpConnection::handle_write() {
 void TcpConnection::handle_close() {
     m_state = Disconnected;
     m_loop->remove_fd(m_client_socket->fd());
-    
-    if (m_connection_cb) {
-        m_connection_cb(shared_from_this());
-    }
 
     if (m_close_cb) {
         m_close_cb(shared_from_this());
+    }
+
+    if (m_connection_cb) {
+        m_connection_cb(shared_from_this());
     }
 }
 

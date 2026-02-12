@@ -12,6 +12,7 @@ public:
     using ConnectionCallback = std::function<void(const std::shared_ptr<TcpConnection>&)>;
     using MessageCallback = std::function<void(const std::shared_ptr<TcpConnection>&, std::string& )>;
     using CloseCallback = std::function<void(const std::shared_ptr<TcpConnection>&)>;
+    enum State { Connecting, Connected, Disconnecting, Disconnected };
 
     TcpConnection(EventLoop* loop, int client_fd, const InetAddress& peerAddr);
     ~TcpConnection() = default;
@@ -29,7 +30,7 @@ public:
     void set_message_callback(MessageCallback cb);
     void set_close_callback(CloseCallback cb);
     int fd();
-
+    State state() const { return m_state; }
     std::string peer_address() const;
     uint16_t peer_port() const;
 private:
@@ -42,7 +43,6 @@ private:
     std::unique_ptr<Socket> m_client_socket;
     InetAddress m_peer_addr;
 
-    enum State { Connecting, Connected, Disconnecting, Disconnected };
     State m_state;
 
     std::string m_input_buffer;

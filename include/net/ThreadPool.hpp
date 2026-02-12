@@ -22,6 +22,7 @@ private:
     const int m_num_threads;
     const LoopCreator m_loop_creator;
 
+    std::vector<EventLoop*> m_loops;
     std::vector<std::thread> m_threads;
     bool m_started = false;
     bool m_stopped = false;
