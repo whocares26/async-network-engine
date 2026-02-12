@@ -14,6 +14,15 @@ void TcpConnection::set_close_callback(CloseCallback cb) {
 int TcpConnection::fd() {
     return m_client_socket->fd();
 }
+
+std::string TcpConnection::peer_address() const {
+    return m_peer_addr.to_ip();
+}
+
+uint16_t TcpConnection::peer_port() const {
+    return m_peer_addr.to_port();
+}
+
 TcpConnection::TcpConnection(EventLoop* loop, int client_fd, const InetAddress& peerAddr) : 
     m_loop(loop), m_peer_addr(peerAddr), m_client_socket(new Socket(client_fd)), 
         m_state(Connecting) { 

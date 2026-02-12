@@ -29,6 +29,9 @@ public:
     void set_message_callback(MessageCallback cb);
     void set_close_callback(CloseCallback cb);
     int fd();
+
+    std::string peer_address() const;
+    uint16_t peer_port() const;
 private:
     void handle_read();
     void handle_write();
