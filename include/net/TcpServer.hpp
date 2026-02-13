@@ -6,6 +6,8 @@
 #include "net/Acceptor.hpp"
 #include "net/TcpConnection.hpp"
 
+namespace net {
+
 class TcpServer {
 public:
     using ConnectionCallback = TcpConnection::ConnectionCallback;
@@ -37,3 +39,5 @@ private:
 
     int m_next_conn_id = 1;
 };
+
+}

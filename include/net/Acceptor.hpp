@@ -1,8 +1,11 @@
 #pragma once
-#include "net/Socket.hpp"
+
+#include "net/TcpSocket.hpp"
 #include "net/InetAddress.hpp"
 #include "net/EventLoop.hpp"
-#include "functional"
+#include <functional>
+
+namespace net {
 
 class Acceptor {
 public:
@@ -15,13 +18,15 @@ public:
     Acceptor operator=(const Acceptor&) = delete;
 
     void set_new_connection_callback(NewConnectionCallback cb);
-
     void listen();
+
 private:
     void handle_read();
 
     EventLoop* m_loop{};
-    Socket m_accept_socket{};
+    TcpSocket m_accept_socket;
     NewConnectionCallback m_new_connection_callback{};
     bool m_listening{};
 };
+
+}

@@ -1,5 +1,7 @@
 #include "net/Socket.hpp"
 
+namespace net {
+
 Socket::Socket(int fd) : m_fd(fd) {}
 
 int Socket::fd() const {
@@ -46,40 +48,10 @@ void Socket::bind(const InetAddress& addr) {
     }
 }
 
-void Socket::listen() {
-    int ec = ::listen(m_fd, SOMAXCONN);
-    if (ec == -1) {
-        throw std::system_error(errno, 
-            std::generic_category(), "Failed to listen port with ::listen");  
-    }
-}
-
-int Socket::accept(InetAddress& peeraddr) {
-    socklen_t len = peeraddr.get_length();
-
-    int client_fd = ::accept(m_fd, const_cast<sockaddr*>(peeraddr.get_sockaddr()), &len);
-    if (client_fd == -1) {
-
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            return -1;
-        }
-
-        throw std::system_error(errno, 
-            std::generic_category(), "Failed to accept new connection with ::accept");  
-    }
-    return client_fd;
-}
-
 Socket::~Socket() {
     if (m_fd != -1) {
         close(m_fd);
     }
 }
 
-Socket::Socket() {
-    m_fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
-    if (m_fd == -1) {
-        throw std::system_error(errno, 
-            std::generic_category(), "Failed to create socket in constructor"); 
-    }
 }

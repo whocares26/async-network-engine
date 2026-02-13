@@ -7,6 +7,8 @@
 #include "net/EventLoop.hpp"
 #include "net/TcpServer.hpp"
 
+namespace net {
+
 class ThreadPool {
 public:
     using LoopCreator = std::function<std::unique_ptr<TcpServer>()>;
@@ -27,3 +29,5 @@ private:
     bool m_started = false;
     bool m_stopped = false;
 };
+
+}

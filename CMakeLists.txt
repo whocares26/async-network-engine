@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(include)
 
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/net/*.cpp")
 
 add_executable(my_server examples/main.cpp ${SOURCES})
 

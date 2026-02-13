@@ -1,5 +1,7 @@
 #include "net/ThreadPool.hpp"
 
+namespace net {
+
 ThreadPool::ThreadPool(int num_threads, LoopCreator loop_creator) 
         : m_num_threads(num_threads), m_loop_creator(loop_creator) {
             if (num_threads <= 0) {
@@ -41,4 +43,6 @@ ThreadPool::~ThreadPool() {
     if (m_started && !m_stopped) {
         stop();
     }
+}
+
 }

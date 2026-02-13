@@ -1,5 +1,7 @@
 #include "net/EventLoop.hpp"
 
+namespace net {
+
 EventLoop::EventLoop() :  m_running(false) {
     m_epoll_fd = epoll_create1(0);
     if (m_epoll_fd == -1) {
@@ -107,4 +109,6 @@ void EventLoop::stop() {
         uint64_t signal = 1;
         write(m_stop_fd, &signal, sizeof(signal));
     }
+}
+
 }

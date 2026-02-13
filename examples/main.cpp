@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 
+using namespace net;
 int main() {
     try {
         unsigned int pool_size = std::thread::hardware_concurrency();

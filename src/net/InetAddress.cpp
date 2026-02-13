@@ -1,5 +1,7 @@
 #include <net/InetAddress.hpp>
 
+namespace net {
+
 InetAddress::InetAddress(uint16_t port, std::string ip) {
     m_addr.sin_family = AF_INET;
     int ec = inet_pton(AF_INET, ip.c_str(), &m_addr.sin_addr);
@@ -35,4 +37,6 @@ std::string InetAddress::to_ip() const {
 
 uint16_t InetAddress::to_port() const {
     return ntohs(m_addr.sin_port);
+}
+
 }

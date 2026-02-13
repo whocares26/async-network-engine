@@ -4,6 +4,9 @@
 #include <string>
 #include <exception>
 #include <system_error>
+
+namespace net {
+
 class InetAddress {
 public:
     InetAddress(uint16_t port, std::string ip = "0.0.0.0");
@@ -21,3 +24,5 @@ public:
 private:
     sockaddr_in m_addr{};
 };
+
+}

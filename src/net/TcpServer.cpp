@@ -1,5 +1,7 @@
 #include "net/TcpServer.hpp"
 
+namespace net {
+
 void TcpServer::set_connection_callback(ConnectionCallback cb) {
     m_connection_cb = cb;
 }
@@ -45,4 +47,6 @@ TcpServer::~TcpServer() {
 }
 EventLoop* TcpServer::get_loop() {
     return m_loop;
+}
+
 }

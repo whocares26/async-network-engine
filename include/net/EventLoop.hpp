@@ -10,6 +10,9 @@
 #include <system_error>
 #include <vector>
 #include <atomic>
+
+namespace net {
+
 class EventLoop {
 public:
     using Callback = std::function<void(uint32_t)>;
@@ -32,3 +35,5 @@ private:
     std::atomic<bool> m_running;
     std::unordered_map<int, Callback> m_callbacks;
 };
+
+}

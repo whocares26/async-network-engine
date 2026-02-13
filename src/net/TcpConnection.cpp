@@ -1,33 +1,21 @@
 #include "net/TcpConnection.hpp"
+namespace net {
 
-void TcpConnection::set_connection_callback(ConnectionCallback cb) {
-    m_connection_cb = cb;
-}
-    
-void TcpConnection::set_message_callback(MessageCallback cb) {
-    m_message_cb = cb;
-}
+void TcpConnection::set_connection_callback(ConnectionCallback cb) { m_connection_cb = cb; }
+void TcpConnection::set_message_callback(MessageCallback cb) { m_message_cb = cb; }
+void TcpConnection::set_close_callback(CloseCallback cb) { m_close_cb = cb; }
 
-void TcpConnection::set_close_callback(CloseCallback cb) {
-    m_close_cb = cb;
-}
-int TcpConnection::fd() {
-    return m_client_socket->fd();
-}
+int TcpConnection::fd() { return m_client_socket->fd(); }
 
-std::string TcpConnection::peer_address() const {
-    return m_peer_addr.to_ip();
-}
+std::string TcpConnection::peer_address() const { return m_peer_addr.to_ip(); }
+uint16_t TcpConnection::peer_port() const { return m_peer_addr.to_port(); }
 
-uint16_t TcpConnection::peer_port() const {
-    return m_peer_addr.to_port();
+TcpConnection::TcpConnection(EventLoop* loop, int client_fd, const InetAddress& peerAddr)
+    : m_loop(loop), m_peer_addr(peerAddr), 
+    m_client_socket(std::make_unique<net::TcpSocket>(client_fd)), m_state(Connecting)
+{
+    m_client_socket->set_nonblocking();
 }
-
-TcpConnection::TcpConnection(EventLoop* loop, int client_fd, const InetAddress& peerAddr) : 
-    m_loop(loop), m_peer_addr(peerAddr), m_client_socket(new Socket(client_fd)), 
-        m_state(Connecting) { 
-            m_client_socket->set_nonblocking();
-        }
 
 void TcpConnection::connection_established() {
     m_state = Connected;
@@ -146,4 +134,6 @@ void TcpConnection::shutdown() {
 
 void TcpConnection::handle_error() {
     handle_close();
+}
+
 }

@@ -1,11 +1,15 @@
 #include "net/Acceptor.hpp"
 
-Acceptor::Acceptor(EventLoop* loop, const InetAddress& listenAddr) : m_loop(loop) {
+namespace net {
+
+Acceptor::Acceptor(EventLoop* loop, const InetAddress& listenAddr)
+    : m_loop(loop), m_accept_socket()
+{
     m_accept_socket.set_reuse_addr(true);
     m_accept_socket.set_reuse_port(true);
-    m_accept_socket.set_nonblocking();
     m_accept_socket.bind(listenAddr);
 }
+
 Acceptor::~Acceptor() {
     if (m_listening) {
         m_loop->remove_fd(m_accept_socket.fd());
@@ -36,8 +40,10 @@ void Acceptor::listen() {
     if (!m_listening) {
         m_listening = true;
         m_accept_socket.listen();
-        m_loop->add_fd(m_accept_socket.fd(), EPOLLIN, [this](uint32_t flags){
+        m_loop->add_fd(m_accept_socket.fd(), EPOLLIN, [this](uint32_t flags) {
             handle_read();
         });
     }
+}
+
 }
