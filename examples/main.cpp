@@ -27,7 +27,7 @@ int main() {
             server->set_connection_callback([](const std::shared_ptr<TcpConnection>& conn) {
                 if (conn->state() == TcpConnection::Connected) {
                     std::cout << std::this_thread::get_id() 
-                              << "Клиент подключился: "
+                              << " -> Клиент подключился: "
                               << conn->peer_address() << ":" << conn->peer_port() 
                               << std::endl;
                     
@@ -39,7 +39,7 @@ int main() {
                     conn->shutdown();
                 } else {
                     std::cout << std::this_thread::get_id() 
-                              << "Клиент отключился" << std::endl;
+                              << " -> Клиент отключился" << std::endl;
                 }
             });
             
