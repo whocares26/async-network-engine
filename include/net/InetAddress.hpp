@@ -14,6 +14,7 @@ public:
     explicit InetAddress(const struct sockaddr_in& addr);
 
     const sockaddr* get_sockaddr() const;
+    sockaddr* get_sockaddr();
 
     socklen_t get_length() const;
 

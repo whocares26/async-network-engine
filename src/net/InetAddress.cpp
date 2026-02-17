@@ -21,6 +21,10 @@ const sockaddr* InetAddress::get_sockaddr() const {
     return reinterpret_cast<const sockaddr*>(&m_addr);
 }
 
+sockaddr* InetAddress::get_sockaddr() {
+    return reinterpret_cast<sockaddr* >(&m_addr);
+}
+
 socklen_t InetAddress::get_length() const {
     return sizeof(m_addr);
 }
