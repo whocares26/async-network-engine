@@ -6,8 +6,8 @@ namespace net {
         Connector(EventLoop *loop);
         void start(const InetAddress& addr, 
                 TcpClient::ConnectionCallback onConnect,
-                MessageCallback onMessage,
-                CloseCallback onClose,
+                TcpClient::MessageCallback onMessage,
+                TcpClient::CloseCallback onClose,
                 TcpClient::ErrorCallback onError);
 
         void cancel();
@@ -23,8 +23,8 @@ namespace net {
         int m_sockfd;
         InetAddress m_serverAddr;
         TcpClient::ConnectionCallback m_onConnect;
-        MessageCallback m_onMessage;
-        CloseCallback m_onClose;
+        TcpClient::MessageCallback m_onMessage;
+        TcpClient::CloseCallback m_onClose;
         TcpClient::ErrorCallback m_onError;
         bool m_connecting;
     };
@@ -33,7 +33,7 @@ namespace net {
 
     void Connector::start(const InetAddress& addr, 
         TcpClient::ConnectionCallback onConnect,
-        MessageCallback onMessage, CloseCallback onClose,
+        TcpClient::MessageCallback onMessage, TcpClient::CloseCallback onClose,
         TcpClient::ErrorCallback onError) {
             m_serverAddr = addr;
             m_onConnect = onConnect;
