@@ -331,16 +331,8 @@ int main(int argc, char* argv[]) {
               << "────────────────────────────────────────────\n";
     
     try {
-        // Создаём EventLoop и ThreadPool
-        unsigned int poolSize = std::thread::hardware_concurrency();
-        net::ThreadPool pool(poolSize, [&cfg, poolSize]() {
-            auto loop = std::make_unique<net::EventLoop>();
-            // Заглушка для TcpServer, который требует InetAddress
-            auto server = std::make_unique<net::TcpServer>(loop.get(), net::InetAddress(0));
-            return server;
-        });
-        
-        pool.start();
+        // Создаём EventLoop
+        net::EventLoop mainLoop;
         
         // Создаём rate limiter
         RateLimiter limiter(cfg.rate);
@@ -351,16 +343,21 @@ int main(int argc, char* argv[]) {
         
         if (cfg.tcp) {
             tcpGen = std::make_unique<TcpTrafficGenerator>(
-                pool.getLoops()[0], cfg, &limiter);
+                &mainLoop, cfg, &limiter);
             tcpGen->start();
         } else {
             udpGen = std::make_unique<UdpTrafficGenerator>(
-                pool.getLoops()[0], cfg, &limiter);
+                &mainLoop, cfg, &limiter);
             udpGen->start();
         }
         
         // Запускаем статистику в отдельном потоке
         std::thread statsThread(statsPrinter);
+        
+        // Запускаем Event Loop в отдельном потоке
+        std::thread loopThread([&mainLoop]() {
+            mainLoop.run();
+        });
         
         // Ждём указанное время или Ctrl+C
         auto endTime = std::chrono::steady_clock::now() + std::chrono::seconds(cfg.duration);
@@ -370,6 +367,7 @@ int main(int argc, char* argv[]) {
         
         // Останавливаем
         running = false;
+        mainLoop.stop();
         
         if (cfg.tcp && tcpGen) {
             tcpGen->stop();
@@ -378,6 +376,7 @@ int main(int argc, char* argv[]) {
         }
         
         statsThread.join();
+        loopThread.join();
         
         double totalMB = totalBytes.load() / 1024.0 / 1024.0;
         double avgRate = totalBytes.load() / cfg.duration / 1024.0;
@@ -387,8 +386,6 @@ int main(int argc, char* argv[]) {
                   << "  Average rate: " << avgRate << " KB/s\n"
                   << "  Total packets: " << totalPackets.load() << "\n"
                   << "  Errors: " << errors.load() << "\n";
-        
-        pool.stop();
         
     } catch (const std::exception& e) {
         std::cerr << "❌ Error: " << e.what() << std::endl;
