@@ -28,7 +28,34 @@ public:
     void cancel();
 
 private:
-    class Connector;
+    class Connector {
+    public:
+        Connector(EventLoop* loop);
+        ~Connector();
+        
+        void start(const InetAddress& addr,
+                   ConnectionCallback onConnect,
+                   MessageCallback onMessage,
+                   CloseCallback onClose,
+                   ErrorCallback onError);
+        
+        void cancel();
+        
+    private:
+        void handleWrite();
+        void handleError();
+        void removeAndClose();
+        
+        EventLoop* m_loop;
+        int m_sockfd{ -1 };
+        InetAddress m_serverAddr;
+        ConnectionCallback m_onConnect;
+        MessageCallback m_onMessage;
+        CloseCallback m_onClose;
+        ErrorCallback m_onError;
+        bool m_connecting{ false };
+    };
+    
     std::unique_ptr<Connector> m_connector;
 };
 

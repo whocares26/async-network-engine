@@ -1,37 +1,16 @@
 #include "net/TcpClient.hpp"
+#include <sys/socket.h>
+#include <errno.h>
 
 namespace net {
-    class Connector {
-    public: 
-        Connector(EventLoop *loop);
-        void start(const InetAddress& addr, 
-                TcpClient::ConnectionCallback onConnect,
-                TcpClient::MessageCallback onMessage,
-                TcpClient::CloseCallback onClose,
-                TcpClient::ErrorCallback onError);
 
-        void cancel();
-        ~Connector();
+    TcpClient::Connector::Connector(EventLoop* loop) : m_loop(loop) {}
 
-    private:
+    TcpClient::Connector::~Connector() {
+        removeAndClose();
+    }
 
-        void handleWrite();
-        void handleError();
-        void removeAndClose();
-
-        EventLoop* m_loop;
-        int m_sockfd;
-        InetAddress m_serverAddr;
-        TcpClient::ConnectionCallback m_onConnect;
-        TcpClient::MessageCallback m_onMessage;
-        TcpClient::CloseCallback m_onClose;
-        TcpClient::ErrorCallback m_onError;
-        bool m_connecting;
-    };
-
-    Connector::Connector(EventLoop* loop) : m_loop(loop) {}
-
-    void Connector::start(const InetAddress& addr, 
+    void TcpClient::Connector::start(const InetAddress& addr, 
         TcpClient::ConnectionCallback onConnect,
         TcpClient::MessageCallback onMessage, TcpClient::CloseCallback onClose,
         TcpClient::ErrorCallback onError) {
@@ -76,7 +55,7 @@ namespace net {
             }
         }
 
-    void Connector::handleError() {
+    void TcpClient::Connector::handleError() {
         if (m_onError) m_onError();
         if (m_sockfd != -1) {
             ::close(m_sockfd);
@@ -85,7 +64,7 @@ namespace net {
         m_connecting = false;
     }
 
-    void Connector::handleWrite() {
+    void TcpClient::Connector::handleWrite() {
         if (m_sockfd == -1) return;
 
         m_loop->remove_fd(m_sockfd);
@@ -110,12 +89,12 @@ namespace net {
         m_sockfd = -1;
         m_connecting = false;
     }
-    void Connector::cancel() {
+    void TcpClient::Connector::cancel() {
         if (!m_connecting) return;
         removeAndClose();
     }
 
-    void Connector::removeAndClose() {
+    void TcpClient::Connector::removeAndClose() {
         if (m_sockfd != -1) {
             m_loop->remove_fd(m_sockfd);
             ::close(m_sockfd);
@@ -124,7 +103,7 @@ namespace net {
         m_connecting = false;
     }
     
-    Connector::~Connector() {
+    TcpClient::Connector::~Connector() {
         removeAndClose();
     }
 
