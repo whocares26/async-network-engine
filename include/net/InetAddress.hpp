@@ -9,6 +9,8 @@ namespace net {
 
 class InetAddress {
 public:
+    InetAddress() = default;
+    
     InetAddress(uint16_t port, std::string ip = "0.0.0.0");
 
     explicit InetAddress(const struct sockaddr_in& addr);

@@ -28,6 +28,12 @@ public:
     void update_fd(int fd, uint32_t events);
     void run();
     void stop();
+    
+    // Execute callback in event loop thread
+    template<typename Func>
+    void runInLoop(Func&& cb) {
+        cb();
+    }
 
 private:
     int m_epoll_fd = -1;

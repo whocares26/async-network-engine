@@ -17,6 +17,9 @@ public:
     void start();
 
     void stop();
+    
+    std::vector<EventLoop*>& getLoops() { return m_loops; }
+    const std::vector<EventLoop*>& getLoops() const { return m_loops; }
 
     ~ThreadPool();
 
