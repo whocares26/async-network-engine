@@ -167,7 +167,10 @@ public:
                 [this, i](const std::shared_ptr<net::TcpConnection>& conn) {
                     std::cout << "[Client " << i << "] Connected successfully\n";
                     activeClients++;
-                    sendLoop(conn);
+                    // Запускаем sendLoop в отдельном потоке
+                    std::thread([this, conn]() {
+                        sendLoop(conn);
+                    }).detach();
                 },
                 [](const std::shared_ptr<net::TcpConnection>&, std::string& data) {
                     totalBytes += data.size();
@@ -196,19 +199,19 @@ public:
     
 private:
     void sendLoop(const std::shared_ptr<net::TcpConnection>& conn) {
-        if (!running) return;
-        
-        std::string data(m_cfg.packetSize, 'X');
-        
-        // Ждём, пока rate limiter разрешит
-        m_limiter->waitIfNeeded(data.size());
-        
-        conn->send(data);
-        
-        // Планируем следующую отправку
-        m_loop->runInLoop([this, conn]() {
-            sendLoop(conn);
-        });
+        while (running && conn->state() == net::TcpConnection::Connected) {
+            std::string data(m_cfg.packetSize, 'X');
+            
+            // Ждём, пока rate limiter разрешит
+            m_limiter->waitIfNeeded(data.size());
+            
+            conn->send(data);
+            totalBytes += data.size();
+            totalPackets++;
+            
+            // Небольшая задержка для контроля скорости
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
     }
     
     net::EventLoop* m_loop;
@@ -240,8 +243,10 @@ public:
             m_clients.push_back(std::move(client));
         }
         
-        // Запускаем отправку
-        sendLoop();
+        // Запускаем отправку в отдельном потоке
+        std::thread([this]() {
+            sendLoop();
+        }).detach();
     }
     
     void stop() {
@@ -250,26 +255,25 @@ public:
     
 private:
     void sendLoop() {
-        if (!running || m_clients.empty()) return;
-        
-        std::string data(m_cfg.packetSize, 'U');
-        
-        // Ждём разрешения rate limiter (учитываем, что отправляем всем клиентам)
-        m_limiter->waitIfNeeded(data.size() * m_clients.size());
-        
-        for (auto& client : m_clients) {
-            ssize_t sent = client->send(data);
-            if (sent > 0) {
-                totalBytes += sent;
-                totalPackets++;
-            } else {
-                errors++;
+        while (running && !m_clients.empty()) {
+            std::string data(m_cfg.packetSize, 'U');
+            
+            // Ждём разрешения rate limiter (учитываем, что отправляем всем клиентам)
+            m_limiter->waitIfNeeded(data.size() * m_clients.size());
+            
+            for (auto& client : m_clients) {
+                ssize_t sent = client->send(data);
+                if (sent > 0) {
+                    totalBytes += sent;
+                    totalPackets++;
+                } else {
+                    errors++;
+                }
             }
+            
+            // Небольшая задержка для контроля скорости
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-        
-        m_loop->runInLoop([this]() {
-            sendLoop();
-        });
     }
     
     net::EventLoop* m_loop;
