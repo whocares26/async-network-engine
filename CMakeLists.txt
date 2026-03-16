@@ -10,4 +10,7 @@ file(GLOB SOURCES "src/net/*.cpp")
 
 add_executable(my_server examples/main.cpp ${SOURCES})
 
+add_executable(echo_server examples/echo_server.cpp ${SOURCES})
+
 target_link_libraries(my_server pthread)
+target_link_libraries(echo_server pthread)

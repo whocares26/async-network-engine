@@ -164,7 +164,8 @@ public:
             auto client = std::make_unique<net::TcpClient>(m_loop);
             
             client->connect(m_serverAddr,
-                [this](const std::shared_ptr<net::TcpConnection>& conn) {
+                [this, i](const std::shared_ptr<net::TcpConnection>& conn) {
+                    std::cout << "[Client " << i << "] Connected successfully\n";
                     activeClients++;
                     sendLoop(conn);
                 },
@@ -172,10 +173,12 @@ public:
                     totalBytes += data.size();
                     totalPackets++;
                 },
-                [](const std::shared_ptr<net::TcpConnection>&) {
+                [this, i](const std::shared_ptr<net::TcpConnection>&) {
+                    std::cout << "[Client " << i << "] Disconnected\n";
                     activeClients--;
                 },
-                []() {
+                [this, i]() {
+                    std::cout << "[Client " << i << "] Connection error - server unavailable?\n";
                     errors++;
                 }
             );
@@ -328,7 +331,8 @@ int main(int argc, char* argv[]) {
               << "  Duration: " << cfg.duration << "s\n"
               << "  Packet size: " << cfg.packetSize << " bytes\n"
               << "  Target rate: " << std::fixed << std::setprecision(2) << rateMB << " MB/s\n"
-              << "────────────────────────────────────────────\n";
+              << "────────────────────────────────────────────\n"
+              << "⚠ Make sure target server is running on " << cfg.host << ":" << cfg.port << "!\n\n";
     
     try {
         // Создаём EventLoop
