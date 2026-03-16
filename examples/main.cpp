@@ -15,9 +15,6 @@
 #include "net/UdpClient.hpp"
 #include "net/InetAddress.hpp"
 
-// ============================================================================
-// Глобальные переменные для статистики и управления
-// ============================================================================
 std::atomic<uint64_t> totalBytes{0};
 std::atomic<uint64_t> totalPackets{0};
 std::atomic<uint64_t> activeClients{0};
@@ -26,21 +23,18 @@ std::atomic<bool> running{true};
 
 void signalHandler(int) {
     running = false;
-    std::cout << "\n⏹Stopping...\n";
+    std::cout << "\nStopping...\n";
 }
 
-// ============================================================================
-// Конфигурация
-// ============================================================================
 struct Config {
-    bool tcp = true;              // true = TCP, false = UDP
+    bool tcp = true;
     std::string host = "127.0.0.1";
     int port = 8080;
     int numClients = 1;
-    int duration = 60;             // секунд
-    int packetSize = 1024;          // байт
-    int rate = 1024 * 1024;         // байт/сек (1 MB/s по умолчанию)
-    bool broadcast = false;         // для UDP
+    int duration = 60;
+    int packetSize = 1024;
+    int rate = 1024 * 1024;
+    bool broadcast = false;
     bool help = false;
 };
 
@@ -107,9 +101,6 @@ bool parseArgs(int argc, char* argv[], Config& cfg) {
     return true;
 }
 
-// ============================================================================
-// Rate Limiter (простой Token Bucket)
-// ============================================================================
 class RateLimiter {
 public:
     RateLimiter(int bytesPerSec) 
@@ -117,18 +108,15 @@ public:
         , m_bytesThisSec(0)
         , m_lastReset(std::chrono::steady_clock::now()) {}
     
-    // Проверяем, можем ли отправить bytes
     bool canSend(int bytes) {
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - m_lastReset).count();
         
-        // Каждую секунду сбрасываем счётчик
         if (elapsed >= 1) {
             m_bytesThisSec = 0;
             m_lastReset = now;
         }
         
-        // Проверяем, не превысим ли лимит
         if (m_bytesThisSec + bytes <= m_bytesPerSec) {
             m_bytesThisSec += bytes;
             return true;
@@ -136,7 +124,6 @@ public:
         return false;
     }
     
-    // Ждём, пока можно будет отправить
     void waitIfNeeded(int bytes) {
         while (running && !canSend(bytes)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -149,9 +136,6 @@ private:
     std::chrono::steady_clock::time_point m_lastReset;
 };
 
-// ============================================================================
-// TCP генератор
-// ============================================================================
 class TcpTrafficGenerator {
 public:
     TcpTrafficGenerator(net::EventLoop* loop, const Config& cfg, RateLimiter* limiter)
@@ -165,9 +149,8 @@ public:
             
             client->connect(m_serverAddr,
                 [this, i](const std::shared_ptr<net::TcpConnection>& conn) {
-                    std::cout << "[Client " << i << "] Connected successfully\n";
+                    std::cout << "[Client " << i << "] Connected\n";
                     activeClients++;
-                    // Запускаем sendLoop в отдельном потоке
                     std::thread([this, conn]() {
                         sendLoop(conn);
                     }).detach();
@@ -181,7 +164,7 @@ public:
                     activeClients--;
                 },
                 [this, i]() {
-                    std::cout << "[Client " << i << "] Connection error - server unavailable?\n";
+                    std::cout << "[Client " << i << "] Connection error\n";
                     errors++;
                 }
             );
@@ -202,14 +185,12 @@ private:
         while (running && conn->state() == net::TcpConnection::Connected) {
             std::string data(m_cfg.packetSize, 'X');
             
-            // Ждём, пока rate limiter разрешит
             m_limiter->waitIfNeeded(data.size());
             
             conn->send(data);
             totalBytes += data.size();
             totalPackets++;
             
-            // Небольшая задержка для контроля скорости
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
@@ -221,9 +202,6 @@ private:
     std::vector<std::unique_ptr<net::TcpClient>> m_clients;
 };
 
-// ============================================================================
-// UDP генератор
-// ============================================================================
 class UdpTrafficGenerator {
 public:
     UdpTrafficGenerator(net::EventLoop* loop, const Config& cfg, RateLimiter* limiter)
@@ -270,8 +248,7 @@ private:
                     errors++;
                 }
             }
-            
-            // Небольшая задержка для контроля скорости
+                    
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
@@ -282,9 +259,6 @@ private:
     std::vector<std::unique_ptr<net::UdpClient>> m_clients;
 };
 
-// ============================================================================
-// Функция вывода статистики
-// ============================================================================
 void statsPrinter() {
     auto startTime = std::chrono::steady_clock::now();
     uint64_t lastBytes = 0;
@@ -313,9 +287,6 @@ void statsPrinter() {
     std::cout << "\n";
 }
 
-// ============================================================================
-// Главная функция
-// ============================================================================
 int main(int argc, char* argv[]) {
     Config cfg;
     if (!parseArgs(argc, argv, cfg) || cfg.help) {
@@ -328,24 +299,20 @@ int main(int argc, char* argv[]) {
     
     double rateMB = cfg.rate / 1024.0 / 1024.0;
     
-    std::cout << "🚀 Traffic Generator starting...\n"
+    std::cout << "Traffic Generator starting...\n"
               << "  Protocol: " << (cfg.tcp ? "TCP" : "UDP") << "\n"
               << "  Target: " << cfg.host << ":" << cfg.port << "\n"
               << "  Clients: " << cfg.numClients << "\n"
               << "  Duration: " << cfg.duration << "s\n"
               << "  Packet size: " << cfg.packetSize << " bytes\n"
               << "  Target rate: " << std::fixed << std::setprecision(2) << rateMB << " MB/s\n"
-              << "────────────────────────────────────────────\n"
-              << "⚠ Make sure target server is running on " << cfg.host << ":" << cfg.port << "!\n\n";
+              << "────────────────────────────────────────────\n";
     
     try {
-        // Создаём EventLoop
         net::EventLoop mainLoop;
         
-        // Создаём rate limiter
         RateLimiter limiter(cfg.rate);
         
-        // Создаём генератор трафика
         std::unique_ptr<TcpTrafficGenerator> tcpGen;
         std::unique_ptr<UdpTrafficGenerator> udpGen;
         
@@ -359,21 +326,17 @@ int main(int argc, char* argv[]) {
             udpGen->start();
         }
         
-        // Запускаем статистику в отдельном потоке
         std::thread statsThread(statsPrinter);
         
-        // Запускаем Event Loop в отдельном потоке
         std::thread loopThread([&mainLoop]() {
             mainLoop.run();
         });
         
-        // Ждём указанное время или Ctrl+C
         auto endTime = std::chrono::steady_clock::now() + std::chrono::seconds(cfg.duration);
         while (running && std::chrono::steady_clock::now() < endTime) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         
-        // Останавливаем
         running = false;
         mainLoop.stop();
         
@@ -385,11 +348,10 @@ int main(int argc, char* argv[]) {
         
         statsThread.join();
         loopThread.join();
-        
         double totalMB = totalBytes.load() / 1024.0 / 1024.0;
         double avgRate = totalBytes.load() / cfg.duration / 1024.0;
         
-        std::cout << "\n✅ Test completed.\n"
+        std::cout << "\nTest completed.\n"
                   << "  Total bytes: " << std::fixed << std::setprecision(2) << totalMB << " MB\n"
                   << "  Average rate: " << avgRate << " KB/s\n"
                   << "  Total packets: " << totalPackets.load() << "\n"
