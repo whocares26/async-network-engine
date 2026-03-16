@@ -102,11 +102,6 @@ namespace net {
         }    
         m_connecting = false;
     }
-    
-    TcpClient::Connector::~Connector() {
-        removeAndClose();
-    }
-
 
     TcpClient::TcpClient(EventLoop* loop) : 
         m_connector(std::make_unique<Connector>(loop)) { }
